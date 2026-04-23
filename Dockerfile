@@ -26,8 +26,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     avahi-daemon \
     libnss-mdns \
     libudev1 \
+    locales \
     dbus \
     && rm -rf /var/lib/apt/lists/*
+
+# PostgreSQL init requires this locale for Buttons database creation
+RUN sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+    && locale-gen en_US.UTF-8 \
+    && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
 
 # Restore normal policy so runtime service calls work
 RUN rm /usr/sbin/policy-rc.d
