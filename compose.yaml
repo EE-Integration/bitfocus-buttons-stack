@@ -1,11 +1,6 @@
 services:
   buttons:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - BUTTONS_URL
-    image: bitfocus-buttons:${IMAGE_TAG:-latest}
+    image: efg01/bitfocus-buttons:${IMAGE_TAG:-latest}
     container_name: bitfocus_buttons
     restart: unless-stopped
     network_mode: host

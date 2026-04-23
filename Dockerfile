@@ -36,12 +36,20 @@ RUN rm /usr/sbin/policy-rc.d
 RUN groupadd buttons \
     && useradd -m -s /bin/bash -g buttons buttons
 
-# Download and extract the Bitfocus Buttons release
-# Override BUTTONS_URL at build time to deploy a different version
+# Copy local release cache (optional for local builds)
+COPY bitfocus-buttons-linux-x64/ /tmp/bitfocus-buttons-linux-x64/
+
+# Extract local tarball when present; otherwise download from CDN.
+# Override BUTTONS_TARBALL and/or BUTTONS_URL at build time as needed.
+ARG BUTTONS_TARBALL=bitfocus-buttons-linux-x64-5585-918fc50d.tar.gz
 ARG BUTTONS_URL=https://s4-cf.bitfocus.io/builds/buttons/bitfocus-buttons-linux-x64-5585-918fc50d.tar.gz
 RUN mkdir -p /opt/bitfocus-buttons \
-    && curl -fsSL "$BUTTONS_URL" \
-    | tar -xz -C /opt/bitfocus-buttons --strip-components=1 \
+    && if [ -f "/tmp/bitfocus-buttons-linux-x64/$BUTTONS_TARBALL" ]; then \
+         tar -xzf "/tmp/bitfocus-buttons-linux-x64/$BUTTONS_TARBALL" -C /opt/bitfocus-buttons --strip-components=1; \
+       else \
+         curl -fsSL "$BUTTONS_URL" | tar -xz -C /opt/bitfocus-buttons --strip-components=1; \
+       fi \
+    && rm -rf /tmp/bitfocus-buttons-linux-x64 \
     && chown -R buttons:buttons /opt/bitfocus-buttons \
     && chmod +x /opt/bitfocus-buttons/watchdog-cli
 
