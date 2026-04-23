@@ -41,6 +41,7 @@ You can use the included Make targets:
 
 - `make docker-build-amd64 IMAGE_TAG=<tag>` to build and load locally
 - `make docker-push-amd64 IMAGE_TAG=<tag>` to build and push to Docker Hub
+- Set `PUSH_LATEST=1` only if your registry allows mutable `latest` tags
 
 On Apple Silicon, these targets use the Docker `colima` context by default and build for `linux/amd64`.
 If Colima is not running, start it first with:

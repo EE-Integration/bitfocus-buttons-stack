@@ -5,14 +5,15 @@ IMAGE_TAG ?= latest
 BUTTONS_TARBALL ?= bitfocus-buttons-linux-x64-5585-918fc50d.tar.gz
 BUTTONS_URL ?= https://s4-cf.bitfocus.io/builds/buttons/bitfocus-buttons-linux-x64-5585-918fc50d.tar.gz
 BUILDER_NAME ?= colima-amd64
+PUSH_LATEST ?= 0
 
 .PHONY: help docker-preflight docker-colima-up docker-build-amd64 docker-push-amd64 docker-build-local docker-push-local
 
 help:
 	@echo "Bitfocus Buttons stack - image build targets"
 	@echo ""
-	@echo "  make docker-build-amd64 Build linux/amd64 image with IMAGE_TAG + latest (load local)"
-	@echo "  make docker-push-amd64  Buildx push linux/amd64 image with IMAGE_TAG + latest"
+	@echo "  make docker-build-amd64 Build linux/amd64 image with IMAGE_TAG (load local)"
+	@echo "  make docker-push-amd64  Buildx push linux/amd64 image with IMAGE_TAG"
 	@echo "  make docker-colima-up   Start Colima (qemu) if not running"
 	@echo "  make docker-build-local Alias for docker-build-amd64"
 	@echo "  make docker-push-local  Alias for docker-push-amd64"
@@ -21,6 +22,7 @@ help:
 	@echo "  DOCKER_CONTEXT=$(DOCKER_CONTEXT)"
 	@echo "  DOCKER_IMAGE=$(DOCKER_IMAGE)"
 	@echo "  IMAGE_TAG=$(IMAGE_TAG)"
+	@echo "  PUSH_LATEST=$(PUSH_LATEST)"
 	@echo "  BUTTONS_TARBALL=$(BUTTONS_TARBALL)"
 	@echo "  BUTTONS_URL=$(BUTTONS_URL)"
 	@echo ""
@@ -44,8 +46,10 @@ docker-build-amd64: docker-preflight
 	docker --context $(DOCKER_CONTEXT) buildx build --platform $(DOCKER_PLATFORM) --load \
 		--build-arg BUTTONS_TARBALL=$(BUTTONS_TARBALL) \
 		--build-arg BUTTONS_URL=$(BUTTONS_URL) \
-		-t $(DOCKER_IMAGE):$(IMAGE_TAG) \
-		-t $(DOCKER_IMAGE):latest .
+		-t $(DOCKER_IMAGE):$(IMAGE_TAG) .
+	@if [ "$(PUSH_LATEST)" = "1" ]; then \
+		docker --context $(DOCKER_CONTEXT) tag $(DOCKER_IMAGE):$(IMAGE_TAG) $(DOCKER_IMAGE):latest; \
+	fi
 
 docker-push-amd64: docker-preflight
 	@docker --context $(DOCKER_CONTEXT) buildx inspect $(BUILDER_NAME) >/dev/null 2>&1 || \
@@ -54,8 +58,13 @@ docker-push-amd64: docker-preflight
 	docker --context $(DOCKER_CONTEXT) buildx build --platform $(DOCKER_PLATFORM) --push \
 		--build-arg BUTTONS_TARBALL=$(BUTTONS_TARBALL) \
 		--build-arg BUTTONS_URL=$(BUTTONS_URL) \
-		-t $(DOCKER_IMAGE):$(IMAGE_TAG) \
-		-t $(DOCKER_IMAGE):latest .
+		-t $(DOCKER_IMAGE):$(IMAGE_TAG) .
+	@if [ "$(PUSH_LATEST)" = "1" ]; then \
+		docker --context $(DOCKER_CONTEXT) buildx build --platform $(DOCKER_PLATFORM) --push \
+			--build-arg BUTTONS_TARBALL=$(BUTTONS_TARBALL) \
+			--build-arg BUTTONS_URL=$(BUTTONS_URL) \
+			-t $(DOCKER_IMAGE):latest .; \
+	fi
 
 docker-build-local: docker-build-amd64
 
