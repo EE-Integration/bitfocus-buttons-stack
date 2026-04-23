@@ -2,13 +2,13 @@
 
 Docker deployment for [Bitfocus Buttons](https://bitfocus.io/buttons), targeting Portainer with repository-based stack deployment.
 
-The image is built from source at deploy time. The Bitfocus Buttons release is downloaded directly from the Bitfocus CDN during the Docker build — no binary files are stored in this repository.
+The stack deploy pulls a prebuilt image from Docker Hub at deploy time.
 
 ## Prerequisites
 
 - Portainer Business Edition with access to this private repository
 - A valid Bitfocus Buttons license
-- The Bitfocus Buttons Linux x64 CDN URL for the release you intend to deploy
+- Docker Hub access to pull `efg01/bitfocus-buttons` (or your forked image)
 
 ## Deployment
 
@@ -21,16 +21,31 @@ The image is built from source at deploy time. The Bitfocus Buttons release is d
 
 | Variable | Required | Description |
 |---|---|---|
-| `BUTTONS_URL` | Yes | Bitfocus CDN URL for the Linux x64 release tarball |
-| `IMAGE_TAG` | No | Tag for the built image (defaults to `latest`) |
+| `IMAGE_TAG` | No | Tag for the pulled image (defaults to `latest`) |
 
-5. Deploy the stack. Portainer will build the image and start the container.
+5. Deploy the stack. Portainer will pull the image and start the container.
 
 The application will be available at `http://<host>:4440` once the container is healthy. First boot takes longer due to PostgreSQL cluster initialization.
 
 ### Updating
 
-To deploy a new Buttons release, update `BUTTONS_URL` in the Portainer stack environment variables to the new CDN URL and redeploy.
+To deploy a new Buttons release, push a new image tag to Docker Hub and update `IMAGE_TAG` in the Portainer stack environment variables, then redeploy.
+
+### Local image builds
+
+For local `docker build` workflows, place the release tarball in `bitfocus-buttons-linux-x64/`.
+The Dockerfile will use the local file first (default `BUTTONS_TARBALL=bitfocus-buttons-linux-x64-5585-918fc50d.tar.gz`) and fall back to `BUTTONS_URL` if that file is not present.
+This is only needed when producing/pushing new image tags.
+
+You can use the included Make targets:
+
+- `make docker-build-amd64 IMAGE_TAG=<tag>` to build and load locally
+- `make docker-push-amd64 IMAGE_TAG=<tag>` to build and push to Docker Hub
+
+On Apple Silicon, these targets use the Docker `colima` context by default and build for `linux/amd64`.
+If Colima is not running, start it first with:
+
+- `make docker-colima-up`
 
 ## Architecture Notes
 
