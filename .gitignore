@@ -1,5 +1,7 @@
 # Local environment — never commit
 .env
+/bitfocus-buttons-linux-x64/*
+!/bitfocus-buttons-linux-x64/.gitkeep
 
 # macOS
 .DS_Store
