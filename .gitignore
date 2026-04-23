@@ -1,0 +1,5 @@
+# Local environment — never commit
+.env
+
+# macOS
+.DS_Store
